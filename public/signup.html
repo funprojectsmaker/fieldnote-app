@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create your account · Fieldnote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="auth">
+  <aside class="auth-side">
+    <a class="logo" href="/">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="#fff"/><path d="M9 8h12M9 15h8M9 22h5" stroke="#2350D8" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="21" r="3.5" fill="#FF6B4A"/></svg>
+      Fieldnote
+    </a>
+    <div>
+      <h2>Your whole crew's day, on one screen.</h2>
+      <ul>
+        <li>14-day free trial, no credit card</li>
+        <li>Set up in under 30 minutes</li>
+        <li>Cancel anytime with one click</li>
+      </ul>
+    </div>
+    <blockquote>"My techs were using it on day one. That never happens."<small>Sample quote · Operations manager, HVAC</small></blockquote>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <div>
+        <h1>Start your free trial</h1>
+        <p class="sub">Create your Fieldnote account. It takes about a minute.</p>
+      </div>
+
+      <form class="form" id="signup" novalidate>
+        <div class="alert" role="alert" hidden></div>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input id="name" name="name" autocomplete="name" required>
+          <span class="err"></span>
+        </div>
+        <div class="field">
+          <label for="company">Company name <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <input id="company" name="company" autocomplete="organization">
+          <span class="err"></span>
+        </div>
+        <div class="field">
+          <label for="email">Work email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+          <span class="err"></span>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw">
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="pw-hint">
+            <button type="button" aria-pressed="false" aria-label="Show password">Show</button>
+          </div>
+          <span class="hint" id="pw-hint">At least 8 characters.</span>
+          <span class="err"></span>
+        </div>
+        <button class="btn" type="submit">Create account</button>
+      </form>
+
+      <p class="switch">Already have an account? <a href="/login">Log in</a></p>
+      <p class="legal">By creating an account you agree to the Terms and Privacy Policy.</p>
+      <p class="demo-note">Portfolio demo by Shreyas · Accounts are real, but this is a fictional product</p>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { api, showErrors, busy, wirePasswordToggles, safeNext } from '/js/api.js';
+wirePasswordToggles();
+
+const form = document.getElementById('signup');
+const prefill = new URLSearchParams(location.search).get('email');
+if (prefill) form.email.value = prefill;
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(form));
+
+  // Quick checks in the browser; the server checks everything again.
+  const fields = {};
+  if (!body.name.trim()) fields.name = 'Enter your name.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(body.email.trim())) fields.email = 'Enter a valid email address.';
+  if (body.password.length < 8) fields.password = 'Use at least 8 characters.';
+  if (Object.keys(fields).length) return showErrors(form, '', fields);
+
+  const btn = form.querySelector('[type=submit]');
+  busy(btn, true, 'Creating account…');
+  try {
+    await api('/auth/signup', { method: 'POST', body });
+    location.href = safeNext('/app');
+  } catch (err) {
+    showErrors(form, err.message, err.fields);
+    busy(btn, false);
+  }
+});
+</script>
+</body>
+</html>
