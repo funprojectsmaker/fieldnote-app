@@ -1,0 +1,19 @@
+{
+  "name": "fieldnote-app",
+  "version": "1.0.0",
+  "description": "Fieldnote demo SaaS: landing page with working signup, login and a jobs dashboard (Express + SQLite).",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0"
+  }
+}
