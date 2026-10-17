@@ -3,6 +3,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
+import fs from 'node:fs';
 import { db } from './db.js';
 import {
   hashPassword, verifyPassword, DUMMY_HASH,
@@ -13,6 +14,13 @@ import {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(import.meta.dirname, 'public');
+
+// Fail loudly in the logs if the website files weren't uploaded next to server.js.
+for (const f of ['index.html', 'signup.html', 'login.html', 'app.html', 'css/app.css', 'js/api.js']) {
+  if (!fs.existsSync(path.join(PUBLIC, f))) {
+    console.error(`MISSING FILE: public/${f}. Upload the whole "public" folder (with its css and js folders) next to server.js.`);
+  }
+}
 
 app.set('trust proxy', 1);          // correct client IPs behind Render/Railway proxies
 app.disable('x-powered-by');
@@ -194,7 +202,11 @@ app.get(['/app', '/app.html'], (req, res, next) => {
 
 app.use(express.static(PUBLIC, { extensions: ['html'] }));
 
-app.use((req, res) => res.status(404).sendFile(path.join(PUBLIC, '404.html')));
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(PUBLIC, '404.html'), (err) => {
+    if (err && !res.headersSent) res.type('text').send('Page not found.');
+  });
+});
 
 // Catch-all error handler: log the real error, show a safe message.
 app.use((err, req, res, next) => {
